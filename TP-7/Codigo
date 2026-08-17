@@ -1,0 +1,209 @@
+#include <Adafruit_NeoPixel.h>
+
+#define NEOPIX1 13
+#define NEOPIX2 12
+#define btn1 2
+#define BUZZ 6
+#define CANTLED 32
+
+Adafruit_NeoPixel pixel1(CANTLED, NEOPIX1, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel pixel2(CANTLED, NEOPIX2, NEO_GRB + NEO_KHZ800);
+
+int posicion[32] = {
+  28,24,20,16,12,8,4,0,
+  29,25,21,17,13,9,5,1,
+  30,26,22,18,14,10,6,2,
+  31,27,23,19,15,11,7,3
+};
+
+int numeros[6][32] = {
+  {
+    0,1,0,0,
+    1,1,0,0,
+    0,1,0,0,
+    0,1,0,0,
+    0,1,0,0,
+    0,1,0,0,
+    1,1,1,0,
+    0,0,0,0
+  },
+
+  {
+    1,1,1,0,
+    0,0,0,1,
+    0,0,0,1,
+    0,1,1,0,
+    1,0,0,0,
+    1,0,0,0,
+    1,1,1,1,
+    0,0,0,0
+  },
+
+  {
+    1,1,1,0,
+    0,0,0,1,
+    0,0,0,1,
+    0,1,1,0,
+    0,0,0,1,
+    0,0,0,1,
+    1,1,1,0,
+    0,0,0,0
+  },
+
+  {
+    1,0,0,1,
+    1,0,0,1,
+    1,0,0,1,
+    1,1,1,1,
+    0,0,0,1,
+    0,0,0,1,
+    0,0,0,1,
+    0,0,0,0
+  },
+
+  {
+    1,1,1,1,
+    1,0,0,0,
+    1,0,0,0,
+    1,1,1,0,
+    0,0,0,1,
+    0,0,0,1,
+    1,1,1,0,
+    0,0,0,0
+  },
+
+  {
+    0,1,1,1,
+    1,0,0,0,
+    1,0,0,0,
+    1,1,1,0,
+    1,0,0,1,
+    1,0,0,1,
+    0,1,1,0,
+    0,0,0,0
+  }
+};
+
+bool botonAnterior = HIGH;
+
+void setup()
+{
+  pinMode(btn1, INPUT_PULLUP);
+  pinMode(BUZZ, OUTPUT);
+
+  pixel1.begin();
+  pixel2.begin();
+
+  pixel1.clear();
+  pixel2.clear();
+
+  pixel1.show();
+  pixel2.show();
+
+  Serial.begin(9600);
+
+  randomSeed(analogRead(A0));
+}
+
+void loop()
+{
+  bool botonActual = digitalRead(btn1);
+
+  if (botonAnterior == HIGH && botonActual == LOW)
+  {
+    for (int i = 0; i < 10; i++)
+    {
+      int dado1 = random(1, 7);
+      int dado2 = random(1, 7);
+
+      mostrarDado1(dado1);
+      mostrarDado2(dado2);
+
+      delay(80);
+    }
+
+    int dado1 = random(1, 7);
+    int dado2 = random(1, 7);
+
+    mostrarDado1(dado1);
+    mostrarDado2(dado2);
+
+    Serial.print("Dado 1: ");
+    Serial.println(dado1);
+
+    Serial.print("Dado 2: ");
+    Serial.println(dado2);
+
+    Serial.print("Suma: ");
+    Serial.println(dado1 + dado2);
+
+    if (dado1 + dado2 == 7)
+    {
+      ganar();
+    }
+
+    delay(50);
+  }
+
+  botonAnterior = botonActual;
+}
+
+void mostrarDado1(int numero)
+{
+  pixel1.clear();
+
+  int elegido = numero - 1;
+
+  for (int i = 0; i < 32; i++)
+  {
+    if (numeros[elegido][posicion[i]] == 1)
+    {
+      pixel1.setPixelColor(i, pixel1.Color(255, 255, 255));
+    }
+  }
+
+  pixel1.show();
+}
+
+void mostrarDado2(int numero)
+{
+  pixel2.clear();
+
+  int elegido = numero - 1;
+
+  for (int i = 0; i < 32; i++)
+  {
+    if (numeros[elegido][posicion[i]] == 1)
+    {
+      pixel2.setPixelColor(i, pixel2.Color(255, 255, 255));
+    }
+  }
+
+  pixel2.show();
+}
+
+void ganar()
+{
+  for (int led = 0; led < 32; led++)
+  {
+    pixel1.setPixelColor(led, pixel1.Color(255, 255, 255));
+    pixel2.setPixelColor(led, pixel2.Color(255, 255, 255));
+  }
+
+  pixel1.show();
+  pixel2.show();
+
+  tone(BUZZ, 1000);
+
+  delay(300);
+
+  pixel1.clear();
+  pixel2.clear();
+
+  pixel1.show();
+  pixel2.show();
+
+  noTone(BUZZ);
+
+  delay(300);
+}
